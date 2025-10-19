@@ -1,11 +1,11 @@
-# Compiled executables (ignore in root, allow in releases folder)
-index.exe
-index.o
-index.ppu
+# Compiled executables
+*.exe
+*.o
+*.ppu
 *.obj
 
-# Allow release executables
-!releases/*.exe
+# Release folder (handled by GitHub Releases)
+releases/
 
 # Backup files
 *.pas~
