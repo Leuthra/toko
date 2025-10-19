@@ -1,54 +1,120 @@
+{
+  Program Sistem Penjualan Online Sederhana
+  
+  Fitur utama:
+  - Manajemen produk (tambah, edit, hapus, lihat)
+  - Keranjang belanja dengan validasi stok
+  - Perhitungan total dan cetak invoice
+  
+  Bahasa: Pascal / Free Pascal
+  Author: Sistem Penjualan Sederhana
+}
+
 program SistemPenjualanSederhana;
 
-uses crt; // Library untuk menggunakan clrscr, readkey, dll.
+uses 
+  crt, sysutils;
 
 const
-  MAX_PRODUK = 20; // Jumlah maksimal produk yang bisa diinput
+  MAX_PRODUK = 20;
 
-// Tipe data untuk menyimpan detail satu produk
 type
   TProduk = record
     nama: string[50];
-    harga: longint; // Menggunakan longint untuk harga yang lebih besar
+    harga: longint;
     stok: integer;
   end;
 
-// Variabel global yang akan digunakan di seluruh program
 var
-  DaftarProduk: array[1..MAX_PRODUK] of TProduk; // Array untuk menyimpan semua produk
-  JumlahProduk: integer = 0; // Pencatat jumlah produk yang sudah diinput
-  Keranjang: array[1..MAX_PRODUK] of TProduk; // Keranjang belanja
-  JumlahBeli: array[1..MAX_PRODUK] of integer; // Jumlah per item di keranjang
-  ItemDiKeranjang: integer = 0; // Pencatat jumlah item di keranjang
+  DaftarProduk: array[1..MAX_PRODUK] of TProduk;
+  JumlahProduk: integer = 0;
+  Keranjang: array[1..MAX_PRODUK] of TProduk;
+  JumlahBeli: array[1..MAX_PRODUK] of integer;
+  ItemDiKeranjang: integer = 0;
   pilihan: char;
 
-// =======================================================================
-// MODUL 1: Prosedur untuk menginput data produk (nama, harga, stok)
-// =======================================================================
-procedure Modul1_InputDataProduk;
+{ UTILITY FUNCTIONS }
+
+function BacaAngka(pesan: string): longint;
+var
+  input: string;
+  angka: longint;
+  kode: integer;
+begin
+  repeat
+    write(pesan);
+    readln(input);
+    val(input, angka, kode);
+    if kode <> 0 then
+      writeln('ERROR: Masukkan angka yang valid!');
+  until kode = 0;
+  BacaAngka := angka;
+end;
+
+function FormatRupiah(harga: longint): string;
+var
+  strHarga: string;
+  i, len: integer;
+  hasil: string;
+begin
+  str(harga, strHarga);
+  len := length(strHarga);
+  hasil := '';
+  
+  for i := 1 to len do
+  begin
+    hasil := hasil + strHarga[i];
+    if ((len - i) mod 3 = 0) and (i < len) then
+      hasil := hasil + '.';
+  end;
+  
+  FormatRupiah := 'Rp ' + hasil;
+end;
+
+procedure TampilkanDaftarProduk;
+var
+  i: integer;
+begin
+  if JumlahProduk = 0 then
+  begin
+    writeln('Belum ada produk yang diinput.');
+    exit;
+  end;
+  
+  writeln('Daftar Produk:');
+  writeln('No. | Nama Produk                | Harga          | Stok');
+  writeln('----+----------------------------+----------------+------');
+  for i := 1 to JumlahProduk do
+  begin
+    write(i:3, ' | ');
+    write(DaftarProduk[i].nama:26, ' | ');
+    write(FormatRupiah(DaftarProduk[i].harga):14, ' | ');
+    writeln(DaftarProduk[i].stok:4);
+  end;
+  writeln('----+----------------------------+----------------+------');
+end;
+
+{ PRODUCT MANAGEMENT MODULES }
+
+procedure InputProdukBaru;
 var
   tambahLagi: char;
 begin
   repeat
-    clrscr; // Bersihkan layar
+    clrscr;
     writeln('====================================');
-    writeln('|      MODUL 1: INPUT PRODUK       |');
+    writeln('|        INPUT PRODUK BARU         |');
     writeln('====================================');
 
-    // Cek apakah array produk sudah penuh
     if JumlahProduk < MAX_PRODUK then
     begin
-      JumlahProduk := JumlahProduk + 1; // Tambah counter produk
+      JumlahProduk := JumlahProduk + 1;
       writeln('Masukkan data untuk Produk ke-', JumlahProduk, ':');
 
       write('  -> Nama Produk : ');
       readln(DaftarProduk[JumlahProduk].nama);
-
-      write('  -> Harga Produk: Rp ');
-      readln(DaftarProduk[JumlahProduk].harga);
-
-      write('  -> Stok Produk : ');
-      readln(DaftarProduk[JumlahProduk].stok);
+      DaftarProduk[JumlahProduk].harga := BacaAngka('  -> Harga Produk: Rp ');
+      DaftarProduk[JumlahProduk].stok := BacaAngka('  -> Stok Produk : ');
 
       writeln;
       writeln('--- Produk berhasil ditambahkan! ---');
@@ -56,7 +122,7 @@ begin
     else
     begin
       writeln('Maaf, kapasitas produk sudah penuh!');
-      break; // Keluar dari loop jika sudah penuh
+      break;
     end;
 
     writeln;
@@ -66,170 +132,293 @@ begin
   until (upcase(tambahLagi) <> 'Y');
 end;
 
-// =======================================================================
-// MODUL 2: Prosedur untuk memilih produk dan jumlah yang dibeli
-// =======================================================================
-procedure Modul2_PilihProduk;
+procedure EditProduk;
 var
-  nomorProduk, kuantitas: integer;
-  i: integer;
+  nomorProduk: integer;
+  pilihEdit: char;
 begin
   clrscr;
   writeln('====================================');
-  writeln('|      MODUL 2: BELI PRODUK        |');
+  writeln('|         EDIT PRODUK              |');
   writeln('====================================');
 
-  // Cek apakah sudah ada produk yang diinput
+  if JumlahProduk = 0 then
+  begin
+    writeln('Belum ada produk yang bisa diedit.');
+    write('Tekan ENTER untuk kembali...');
+    readln;
+    exit;
+  end;
+
+  TampilkanDaftarProduk;
+  writeln;
+  nomorProduk := BacaAngka('Pilih nomor produk yang ingin diedit: ');
+
+  if (nomorProduk > 0) and (nomorProduk <= JumlahProduk) then
+  begin
+    writeln;
+    writeln('Data produk saat ini:');
+    writeln('Nama  : ', DaftarProduk[nomorProduk].nama);
+    writeln('Harga : ', FormatRupiah(DaftarProduk[nomorProduk].harga));
+    writeln('Stok  : ', DaftarProduk[nomorProduk].stok);
+    writeln;
+
+    write('Apa yang ingin diedit? (N)ama/(H)arga/(S)tok/(A)ll: ');
+    readln(pilihEdit);
+
+    case upcase(pilihEdit) of
+      'N': begin
+        write('Nama baru: ');
+        readln(DaftarProduk[nomorProduk].nama);
+      end;
+      'H': DaftarProduk[nomorProduk].harga := BacaAngka('Harga baru: Rp ');
+      'S': DaftarProduk[nomorProduk].stok := BacaAngka('Stok baru: ');
+      'A': begin
+        write('Nama baru: ');
+        readln(DaftarProduk[nomorProduk].nama);
+        DaftarProduk[nomorProduk].harga := BacaAngka('Harga baru: Rp ');
+        DaftarProduk[nomorProduk].stok := BacaAngka('Stok baru: ');
+      end;
+      else
+        writeln('Pilihan tidak valid!');
+    end;
+
+    writeln;
+    writeln('--- Data produk berhasil diupdate! ---');
+  end
+  else
+    writeln('ERROR: Nomor produk tidak ditemukan!');
+
+  write('Tekan ENTER untuk melanjutkan...');
+  readln;
+end;
+
+procedure HapusProduk;
+var
+  nomorProduk, i: integer;
+  konfirmasi: char;
+begin
+  clrscr;
+  writeln('====================================');
+  writeln('|        HAPUS PRODUK              |');
+  writeln('====================================');
+
+  if JumlahProduk = 0 then
+  begin
+    writeln('Belum ada produk yang bisa dihapus.');
+    write('Tekan ENTER untuk kembali...');
+    readln;
+    exit;
+  end;
+
+  TampilkanDaftarProduk;
+  writeln;
+  nomorProduk := BacaAngka('Pilih nomor produk yang ingin dihapus: ');
+
+  if (nomorProduk > 0) and (nomorProduk <= JumlahProduk) then
+  begin
+    writeln;
+    writeln('Produk yang akan dihapus:');
+    writeln('Nama  : ', DaftarProduk[nomorProduk].nama);
+    writeln('Harga : ', FormatRupiah(DaftarProduk[nomorProduk].harga));
+    writeln('Stok  : ', DaftarProduk[nomorProduk].stok);
+    writeln;
+
+    write('Yakin ingin menghapus produk ini? (y/n): ');
+    readln(konfirmasi);
+
+    if upcase(konfirmasi) = 'Y' then
+    begin
+      for i := nomorProduk to JumlahProduk - 1 do
+        DaftarProduk[i] := DaftarProduk[i + 1];
+      
+      JumlahProduk := JumlahProduk - 1;
+      writeln;
+      writeln('--- Produk berhasil dihapus! ---');
+    end
+    else
+      writeln('Penghapusan dibatalkan.');
+  end
+  else
+    writeln('ERROR: Nomor produk tidak ditemukan!');
+
+  write('Tekan ENTER untuk melanjutkan...');
+  readln;
+end;
+
+{ SHOPPING MODULES }
+
+procedure BeliProduk;
+var
+  nomorProduk, kuantitas: integer;
+begin
+  clrscr;
+  writeln('====================================');
+  writeln('|         BELI PRODUK              |');
+  writeln('====================================');
+
   if JumlahProduk = 0 then
   begin
     writeln('Belum ada produk yang diinput. Silakan input produk terlebih dahulu.');
     write('Tekan ENTER untuk kembali...');
     readln;
-    exit; // Keluar dari prosedur jika belum ada produk
+    exit;
   end;
 
-  // Tampilkan daftar produk yang tersedia
-  writeln('Daftar Produk Tersedia:');
-  for i := 1 to JumlahProduk do
-  begin
-    writeln(i, '. ', DaftarProduk[i].nama, ' - Rp', DaftarProduk[i].harga, ' (Stok: ', DaftarProduk[i].stok, ')');
-  end;
-  writeln('------------------------------------');
+  TampilkanDaftarProduk;
+  writeln;
+  nomorProduk := BacaAngka('Pilih nomor produk yang ingin dibeli: ');
 
-  // Proses memilih produk
-  write('Pilih nomor produk yang ingin dibeli: ');
-  readln(nomorProduk);
-
-  // Validasi input nomor produk
   if (nomorProduk > 0) and (nomorProduk <= JumlahProduk) then
   begin
-    write('Masukkan jumlah yang ingin dibeli: ');
-    readln(kuantitas);
+    if DaftarProduk[nomorProduk].stok = 0 then
+    begin
+      writeln('ERROR: Stok produk habis!');
+      write('Tekan ENTER untuk melanjutkan...');
+      readln;
+      exit;
+    end;
+    
+    kuantitas := BacaAngka('Masukkan jumlah yang ingin dibeli: ');
 
-    // Validasi kuantitas (tidak boleh melebihi stok)
     if (kuantitas > 0) and (kuantitas <= DaftarProduk[nomorProduk].stok) then
     begin
-      // Tambahkan item ke keranjang
+      if ItemDiKeranjang >= MAX_PRODUK then
+      begin
+        writeln('ERROR: Keranjang belanja sudah penuh!');
+        write('Tekan ENTER untuk melanjutkan...');
+        readln;
+        exit;
+      end;
+
       ItemDiKeranjang := ItemDiKeranjang + 1;
       Keranjang[ItemDiKeranjang] := DaftarProduk[nomorProduk];
       JumlahBeli[ItemDiKeranjang] := kuantitas;
-
-      // Kurangi stok produk yang dipilih
       DaftarProduk[nomorProduk].stok := DaftarProduk[nomorProduk].stok - kuantitas;
 
       writeln;
       writeln('--- Produk berhasil ditambahkan ke keranjang! ---');
     end
     else
-    begin
       writeln('ERROR: Jumlah beli tidak valid atau melebihi stok!');
-    end;
   end
   else
-  begin
     writeln('ERROR: Nomor produk tidak ditemukan!');
-  end;
 
   write('Tekan ENTER untuk melanjutkan...');
   readln;
 end;
 
-// =======================================================================
-// MODUL 3 & 4: Hitung total belanja + ongkir & cetak invoice
-// =======================================================================
-procedure Modul3dan4_CetakInvoice;
+procedure CetakInvoice;
 var
   i: integer;
   subTotal, ongkir, totalBayar: longint;
 begin
   clrscr;
   writeln('====================================');
-  writeln('|     MODUL 3 & 4: INVOICE         |');
+  writeln('|       KERANJANG & INVOICE        |');
   writeln('====================================');
 
-  // Cek apakah keranjang kosong
   if ItemDiKeranjang = 0 then
   begin
     writeln('Keranjang belanja Anda masih kosong.');
     write('Tekan ENTER untuk kembali...');
     readln;
-    exit; // Keluar dari prosedur
+    exit;
   end;
 
-  // --- Proses Perhitungan (Modul 3) ---
   subTotal := 0;
   writeln('Detail Belanja:');
+  writeln('No. | Produk                     | Qty | Harga      | Total');
+  writeln('----+----------------------------+-----+------------+--------------');
+  
   for i := 1 to ItemDiKeranjang do
   begin
-    // Tampilkan setiap item di keranjang
-    writeln(i, '. ', Keranjang[i].nama);
-    writeln('   ', JumlahBeli[i], ' x Rp', Keranjang[i].harga, ' = Rp', JumlahBeli[i] * Keranjang[i].harga);
-    // Akumulasi subtotal
+    write(i:3, ' | ');
+    write(Keranjang[i].nama:26, ' | ');
+    write(JumlahBeli[i]:3, ' | ');
+    write(FormatRupiah(Keranjang[i].harga):10, ' | ');
+    writeln(FormatRupiah(JumlahBeli[i] * Keranjang[i].harga):12);
     subTotal := subTotal + (JumlahBeli[i] * Keranjang[i].harga);
   end;
 
-  writeln('------------------------------------');
-  writeln('Subtotal Belanja : Rp', subTotal);
-
-  // Input ongkos kirim
-  write('Masukkan Ongkos Kirim : Rp');
-  readln(ongkir);
-
+  writeln('----+----------------------------+-----+------------+--------------');
+  writeln('Subtotal Belanja : ', FormatRupiah(subTotal));
+  ongkir := BacaAngka('Masukkan Ongkos Kirim : Rp ');
   totalBayar := subTotal + ongkir;
 
-  // --- Proses Cetak Invoice (Modul 4) ---
   writeln;
   writeln('====================================');
   writeln('|           INVOICE FINAL          |');
   writeln('====================================');
+  
   for i := 1 to ItemDiKeranjang do
-  begin
     writeln(Keranjang[i].nama, ' (', JumlahBeli[i], ' pcs)');
-  end;
+    
   writeln('------------------------------------');
-  writeln('Subtotal  : Rp', subTotal);
-  writeln('Ongkir    : Rp', ongkir);
+  writeln('Subtotal  : ', FormatRupiah(subTotal));
+  writeln('Ongkir    : ', FormatRupiah(ongkir));
   writeln('------------------------------------');
-  writeln('TOTAL     : Rp', totalBayar);
+  writeln('TOTAL     : ', FormatRupiah(totalBayar));
   writeln('====================================');
   writeln('      Terima Kasih Telah Berbelanja! ');
   writeln;
 
-  // Reset keranjang setelah checkout
   ItemDiKeranjang := 0;
-
   write('Tekan ENTER untuk kembali ke menu utama...');
   readln;
 end;
 
-// =======================================================================
-// PROGRAM UTAMA
-// =======================================================================
+procedure TampilkanMenu;
+begin
+  clrscr;
+  writeln('==========================================');
+  writeln('|   PROGRAM PENJUALAN ONLINE SEDERHANA   |');
+  writeln('==========================================');
+  writeln('| MENU:                                  |');
+  writeln('| 1. Input Data Produk                   |');
+  writeln('| 2. Edit Data Produk                    |');
+  writeln('| 3. Hapus Data Produk                   |');
+  writeln('| 4. Lihat Daftar Produk                 |');
+  writeln('| 5. Pilih & Beli Produk                 |');
+  writeln('| 6. Lihat Keranjang & Cetak Invoice     |');
+  writeln('| 7. Keluar                              |');
+  writeln('==========================================');
+  write('Pilih menu [1-7]: ');
+end;
+
+procedure LihatDaftarProduk;
+begin
+  clrscr;
+  writeln('====================================');
+  writeln('|        DAFTAR PRODUK             |');
+  writeln('====================================');
+  TampilkanDaftarProduk;
+  writeln;
+  write('Tekan ENTER untuk kembali...');
+  readln;
+end;
+
+{ MAIN PROGRAM }
 begin
   repeat
-    clrscr; // Bersihkan layar setiap kali kembali ke menu
-    writeln('========================================');
-    writeln('|   PROGRAM PENJUALAN ONLINE SEDERHANA  |');
-    writeln('========================================');
-    writeln('| MENU:                                |');
-    writeln('| 1. Input Data Produk                 |');
-    writeln('| 2. Pilih & Beli Produk               |');
-    writeln('| 3. Lihat Keranjang & Cetak Invoice   |');
-    writeln('| 4. Keluar                            |');
-    writeln('========================================');
-    write('Pilih menu [1-4]: ');
+    TampilkanMenu;
     readln(pilihan);
 
-    // Pilihan menu menggunakan case
     case pilihan of
-      '1': Modul1_InputDataProduk;
-      '2': Modul2_PilihProduk;
-      '3': Modul3dan4_CetakInvoice;
-      '4': writeln('Terima kasih telah menggunakan program ini.');
+      '1': InputProdukBaru;
+      '2': EditProduk;
+      '3': HapusProduk;
+      '4': LihatDaftarProduk;
+      '5': BeliProduk;
+      '6': CetakInvoice;
+      '7': writeln('Terima kasih telah menggunakan program ini.');
       else
+      begin
         writeln('Pilihan tidak valid! Tekan ENTER untuk mencoba lagi.');
         readln;
+      end;
     end;
 
-  until pilihan = '4'; // Loop akan berhenti jika user memilih '4'
+  until pilihan = '7';
 end.

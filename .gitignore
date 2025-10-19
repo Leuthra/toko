@@ -1,0 +1,53 @@
+# Compiled executables
+*.exe
+*.o
+*.ppu
+*.obj
+
+# Backup files
+*.pas~
+*.bak
+*.backup
+*~
+
+# Free Pascal specific
+*.compiled
+*.fpm
+*.fdb_latexmk
+*.log
+
+# IDE and editor files
+*.dwt
+*.dsk
+*.dof
+*.cfg
+*.identcache
+*.local
+*.tvsconfig
+
+# Output directories
+output/
+backup/
+temp/
+
+# Specific files to ignore
+index.exe
+index.o
+index.ppu
+index0
+index~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development environment
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
