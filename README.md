@@ -208,7 +208,7 @@ Jika Anda ingin **memahami atau mengembangkan** program, baca [TECHNICAL_DOCS.md
 
 ## 📄 Lisensi
 
-Program ini dibuat untuk tujuan pembelajaran dan dapat digunakan secara bebas.
+Program ini dilisensikan di bawah [MIT License](LICENSE). Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk tujuan apapun, termasuk komersial.
 
 ## 👨‍💻 Kontributor
 
