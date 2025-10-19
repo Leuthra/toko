@@ -191,6 +191,8 @@ Proyek ini memiliki dokumentasi lengkap yang terdiri dari:
 
 - **[README.md](README.md)** - Panduan pengguna, instalasi, dan fitur program
 - **[TECHNICAL_DOCS.md](TECHNICAL_DOCS.md)** - Dokumentasi teknis mendalam untuk developer
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Panduan kontribusi untuk developer
+- **[CHANGELOG.md](CHANGELOG.md)** - Riwayat perubahan dan versi
 - **[index.pas](index.pas)** - Source code utama dengan struktur yang rapi dan terkommentari
 
 ### 🎯 Untuk Pengguna
@@ -210,9 +212,26 @@ Jika Anda ingin **memahami atau mengembangkan** program, baca [TECHNICAL_DOCS.md
 
 Program ini dilisensikan di bawah [MIT License](LICENSE). Anda bebas menggunakan, memodifikasi, dan mendistribusikan kode ini untuk tujuan apapun, termasuk komersial.
 
+## 🤝 Contributing
+
+Kami menyambut kontribusi dari siapa saja! Lihat [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan cara berkontribusi.
+
+### 🐛 **Laporkan Bug** 
+Temukan bug? [Buat issue](https://github.com/abifadilahs/Toko-Online-Sederhana/issues/new) dengan detail reproduksi.
+
+### 💡 **Request Feature** 
+Punya ide fitur baru? [Diskusikan di issues](https://github.com/abifadilahs/Toko-Online-Sederhana/issues/new) terlebih dahulu.
+
+### 🔀 **Pull Request**
+1. Fork repository ini
+2. Buat branch untuk feature/fix Anda  
+3. Commit changes dengan message yang jelas
+4. Create Pull Request dengan deskripsi lengkap
+
 ## 👨‍💻 Kontributor
 
-- **Author**: Sistem Penjualan Sederhana
+- **Original Author**: [abifadilahs](https://github.com/abifadilahs)
+- **Enhanced by**: [Leuthra](https://github.com/Leuthra)
 - **Repository**: [Toko-Online-Sederhana](https://github.com/abifadilahs/Toko-Online-Sederhana)
 
 ---
